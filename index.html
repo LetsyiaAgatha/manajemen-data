@@ -126,20 +126,34 @@ margin-top:20px;
 
 <script>
 
-const apiKey = "d10177f4d3ec405cba79d184480faccc";
+const apiKey = "b09de74670353f605cb9ec12e4512294";
 
 function searchNews(){
 
 const keyword = document.getElementById("keyword").value;
 
+if(keyword.trim() === ""){
+alert("Masukkan kata kunci berita terlebih dahulu");
+return;
+}
+
 document.getElementById("results").innerHTML =
 "<div class='loading'>Loading berita...</div>";
 
 const url =
-`https://newsapi.org/v2/everything?q=${keyword}&language=id&sortBy=relevancy&apiKey=${apiKey}`;
+`https://gnews.io/api/v4/search?q=${keyword}&max=10&token=${apiKey}`;
+
 fetch(url)
 .then(response => response.json())
 .then(data => {
+
+console.log(data);
+
+if(!data.articles || data.articles.length === 0){
+alert("Berita tidak ditemukan");
+document.getElementById("results").innerHTML = "";
+return;
+}
 
 let output="";
 
@@ -148,7 +162,7 @@ data.articles.forEach(article => {
 output += `
 <div class="article">
 
-<img src="${article.urlToImage || 'https://via.placeholder.com/400x200'}">
+<img src="${article.image || 'https://via.placeholder.com/400x200'}">
 
 <div class="article-content">
 
@@ -167,14 +181,15 @@ output += `
 
 document.getElementById("results").innerHTML = output;
 
+})
+.catch(error=>{
+alert("Gagal mengambil berita dari API");
+console.log(error);
 });
 
 }
 
-
-
 </script>
-
 
 </body>
 </html>
