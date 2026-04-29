@@ -1,0 +1,7 @@
+.DS_Store
+*.log
+migrate_to_sqlite.php
+update_schema_template.php
+fix_columns.php
+# Database disertakan untuk kebutuhan demo/tugas
+# dms_hospital.sqlite
