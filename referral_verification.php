@@ -13,7 +13,7 @@ if (isset($_GET['approve_id'])) {
     exit;
 }
 
-$sql_queue = "SELECT * FROM referrals WHERE status_flow = 'ENTRY' ORDER BY created_at DESC";
+$sql_queue = "SELECT * FROM referrals WHERE status_flow = 'ENTRY' AND is_deleted = 0 ORDER BY created_at DESC";
 $result = $conn->query($sql_queue);
 $docs_js = [];
 if ($result->num_rows > 0) {

@@ -6,10 +6,10 @@
 require_once 'config.php';
 
 // Dashboard Stats
-$total_rujukan = $conn->query("SELECT COUNT(*) FROM referrals")->fetch_row()[0];
-$antrean_poli = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'VERIFY'")->fetch_row()[0];
-$butuh_verif = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'ENTRY'")->fetch_row()[0];
-$terarsip = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'REPLIED'")->fetch_row()[0];
+$total_rujukan = $conn->query("SELECT COUNT(*) FROM referrals WHERE is_deleted = 0")->fetch_row()[0];
+$antrean_poli = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'VERIFY' AND is_deleted = 0")->fetch_row()[0];
+$butuh_verif = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'ENTRY' AND is_deleted = 0")->fetch_row()[0];
+$terarsip = $conn->query("SELECT COUNT(*) FROM referrals WHERE status_flow = 'REPLIED' AND is_deleted = 0")->fetch_row()[0];
 
 // Log Aktivitas
 $logs = $conn->query("SELECT * FROM referral_logs ORDER BY created_at DESC LIMIT 5");

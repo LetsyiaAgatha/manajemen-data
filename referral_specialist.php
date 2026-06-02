@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['referral_id'])) {
     }
 }
 
-$sql_poli = "SELECT * FROM referrals WHERE status_flow = 'VERIFY' ORDER BY created_at DESC";
+$sql_poli = "SELECT * FROM referrals WHERE status_flow = 'VERIFY' AND is_deleted = 0 ORDER BY created_at DESC";
 $result = $conn->query($sql_poli);
 ?>
 <!DOCTYPE html>
