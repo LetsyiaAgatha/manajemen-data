@@ -40,8 +40,17 @@ if ($result->num_rows > 0) {
         .modal.active { opacity:1; visibility:visible; }
         .modal-layout { background:white; border-radius:24px; display:flex; width:95%; height:95vh; overflow:hidden; }
         
-        /* A4 Template Styles */
-        .preview-container { flex:1; background:#f1f5f9; padding:40px; overflow-y:auto; display:flex; justify-content:center; }
+        .preview-container { 
+            flex:1; 
+            background:#f1f5f9; 
+            padding:40px; 
+            overflow-y:auto; 
+            display:flex; 
+            justify-content:center; 
+            align-items: flex-start; 
+            min-height: 0;
+            height: 100%;
+        }
         .paper-a4 { 
             background:white; 
             width:210mm; 
@@ -52,6 +61,9 @@ if ($result->num_rows > 0) {
             color: black;
             line-height: 1.4;
             font-size: 13px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
         .kop-surat { text-align:center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 15px; }
         .kop-surat h2 { margin:0; font-size: 16px; font-weight: 800; }
@@ -211,16 +223,24 @@ if ($result->num_rows > 0) {
 
                     <!-- DATES & SIGNATURE -->
                     <div style="border-bottom: 1px solid black; margin-bottom: 20px;"></div>
-                    <table class="data-table">
+                    <table class="data-table" style="margin-bottom: 15px;">
                         <tr><td width="150">Tanggal Surat Dibuat</td><td>: <span id="vLetterDate">-</span></td></tr>
                         <tr><td>Berlaku s.d (Expired)</td><td>: <strong id="vExpDate">-</strong></td></tr>
                     </table>
 
-                    <div style="margin-top: 30px; text-align: right; padding-right: 50px;">
-                        <p><span id="vKabKotaSign">-</span>, <span id="vLetterDateSign">-</span></p>
-                        <p style="margin-bottom: 60px;">Dokter Pemeriksa,</p>
-                        <p><strong style="text-decoration: underline;">( <span id="vDocName">-</span> )</strong></p>
-                        <p style="font-size: 11px; color: #64748b;">NIP/SIP: .................................</p>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px;">
+                        <div style="text-align: center; width: 250px; font-size: 13px; line-height: 1.5;">
+                            <p style="margin: 0;"><span id="vKabKotaSign">-</span>, <span id="vLetterDateSign">-</span></p>
+                            <p style="margin: 5px 0 65px 0; font-weight: 500;">Dokter Pemeriksa,</p>
+                            <p style="margin: 0; font-weight: 700; text-decoration: underline;">( <span id="vDocName">-</span> )</p>
+                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">NIP/SIP: .................................</p>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER HALAMAN -->
+                    <div style="margin-top: auto; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif;">
+                        <span>Dokumen Rujukan Digital JKN/BPJS - DMS Hospital</span>
+                        <span style="font-weight: 600;">Halaman 1 dari 1</span>
                     </div>
                 </div>
             </div>
