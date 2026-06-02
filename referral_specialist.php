@@ -62,8 +62,8 @@ $result = $conn->query($sql_poli);
         <header class="navbar">
             <div class="navbar-left">
                 <button class="menu-toggle"><i class="ph ph-list"></i></button>
-                <div class="logo">
-                    <div class="logo-icon"><i class="ph ph-hospital"></i></div>
+                <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="img/logo.png" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
                     <span style="font-size: 14px; font-weight: 800;">RSUD Maju Jaya</span>
                 </div>
             </div>

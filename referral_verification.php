@@ -88,8 +88,8 @@ if ($result->num_rows > 0) {
     <div class="app-container">
         <header class="navbar">
             <div class="navbar-left">
-                <div class="logo">
-                    <div class="logo-icon"><i class="ph ph-hospital"></i></div>
+                <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="img/logo.png" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
                     <span style="font-weight: 800;">RSUD Maju Jaya</span>
                 </div>
             </div>
