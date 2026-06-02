@@ -147,6 +147,21 @@ if ($result->num_rows > 0) {
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        .paper-a4::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            width: 320px;
+            height: 320px;
+            background: url('img/logo.png') no-repeat center;
+            background-size: contain;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
         }
         .kop-surat { text-align:center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 15px; }
         .kop-surat h2 { margin:0; font-size: 16px; font-weight: 800; }
