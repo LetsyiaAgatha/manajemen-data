@@ -81,6 +81,13 @@ $result = $conn->query($sql_docs);
 $docs_js = [];
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
+        if (!empty($row['birth_date'])) {
+            $today = new DateTime();
+            $bday = new DateTime($row['birth_date']);
+            $row['age'] = $today->diff($bday)->y;
+        } else {
+            $row['age'] = '-';
+        }
         $docs_js[] = $row;
     }
     $result->data_seek(0);
@@ -113,6 +120,56 @@ if ($result->num_rows > 0) {
         .form-input { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-family: inherit; font-size: 14px; margin-bottom: 16px; }
         .form-input:focus { border-color: #6366f1; outline: none; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Preview A4 Styles */
+        .modal-layout-preview { width: 95% !important; height: 95vh !important; display: flex !important; overflow: hidden !important; padding: 0 !important; }
+        .preview-container { 
+            flex:1; 
+            background:#f1f5f9; 
+            padding:40px; 
+            overflow-y:auto; 
+            display:flex; 
+            justify-content:center; 
+            align-items: flex-start; 
+            min-height: 0;
+            height: 100%;
+        }
+        .paper-a4 { 
+            background:white; 
+            width:210mm; 
+            min-height:297mm; 
+            padding:20mm; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            font-family:'Inter', sans-serif;
+            color: black;
+            line-height: 1.4;
+            font-size: 13px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .kop-surat { text-align:center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 15px; }
+        .kop-surat h2 { margin:0; font-size: 16px; font-weight: 800; }
+        .kop-surat p { margin:2px 0; font-size: 11px; }
+        
+        .doc-title { text-align:center; margin-bottom: 20px; }
+        .doc-title h1 { text-decoration: underline; margin:0; font-size: 18px; font-weight: 800; }
+        
+        .section-header { font-weight: 800; text-decoration: underline; color: #1e40af; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; }
+        .data-table { width:100%; border-collapse: collapse; margin-bottom: 20px; }
+        .data-table td { padding: 4px 0; vertical-align: top; }
+        
+        .info-box { border: 1px solid black; padding: 15px; min-height: 80px; margin-bottom: 20px; font-style: italic; color: #333; }
+        .sidebar-action { width:350px; padding:32px; background:white; border-left:1px solid #e2e8f0; display:flex; flex-direction:column; }
+
+        @media print {
+            body { background: white !important; margin: 0 !important; padding: 0 !important; }
+            .app-container, .modal, .modal-layout, .sidebar-action, button, a { display: none !important; }
+            .modal.active { position: static !important; display: block !important; visibility: visible !important; opacity: 1 !important; background: none !important; backdrop-filter: none !important; height: auto !important; width: auto !important; overflow: visible !important; }
+            .modal-layout { display: block !important; border-radius: 0 !important; padding: 0 !important; max-height: none !important; overflow: visible !important; width: 100% !important; height: auto !important; box-shadow: none !important; }
+            .preview-container { display: block !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; }
+            .paper-a4 { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; min-height: 0 !important; }
+        }
     </style>
 </head>
 <body>
@@ -193,11 +250,14 @@ if ($result->num_rows > 0) {
                                 </div>
 
                                 <div style="display: flex; gap: 8px;">
-                                    <button onclick="traceDocument('<?= $row['referral_id'] ?>', '<?= $row['patient_name'] ?>')" style="flex: 2; padding: 10px; background: #6366f1; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px;">
+                                    <button onclick="openPreviewModal('<?= $row['referral_id'] ?>')" style="flex: 1.2; padding: 10px; background: #ecfdf5; color: #10b981; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px;" title="Pratinjau Surat Rujukan">
+                                        <i class="ph ph-eye"></i> Preview
+                                    </button>
+                                    <button onclick="traceDocument('<?= $row['referral_id'] ?>', '<?= $row['patient_name'] ?>')" style="flex: 1; padding: 10px; background: #6366f1; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px;">
                                         <i class="ph ph-magnifying-glass"></i> Lacak
                                     </button>
-                                    <button onclick="openEditModal('<?= $row['referral_id'] ?>')" style="flex: 1; padding: 10px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px;" title="Koreksi Data Rujukan">
-                                        <i class="ph ph-pencil-simple"></i> Edit
+                                    <button onclick="openEditModal('<?= $row['referral_id'] ?>')" style="padding: 10px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Koreksi Data Rujukan">
+                                        <i class="ph ph-pencil-simple"></i>
                                     </button>
                                     <a href="referral_explorer.php?delete_id=<?= $row['referral_id'] ?>" onclick="return confirm('Apakah Anda yakin ingin membatalkan rujukan ini? Pembatalan akan dicatat ke dalam audit trail.')" style="padding: 10px; background: #fef2f2; color: #ef4444; border: none; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Batalkan Rujukan">
                                         <i class="ph ph-trash"></i>
@@ -331,6 +391,106 @@ if ($result->num_rows > 0) {
         </div>
     </div>
 
+    <!-- Modal Preview (Official A4 Read-only Template) -->
+    <div class="modal" id="modalPreview" onclick="if(event.target === this) this.classList.remove('active')">
+        <div class="modal-layout modal-layout-preview">
+            <div class="preview-container">
+                <div class="paper-a4" id="printArea">
+                    <!-- KOP SURAT -->
+                    <div class="kop-surat">
+                        <p style="text-transform: uppercase;">PEMERINTAH KABUPATEN/KOTA <span id="vKabKotaHead">-</span></p>
+                        <p style="font-weight: 700;">DINAS KESEHATAN</p>
+                        <h2 style="text-transform: uppercase;">[<span id="vFaskesHead">-</span>]</h2>
+                        <p>Alamat: <span id="vFaskesAlamat">-</span> | Telp: <span id="vFaskesTelp">-</span> | Email: <span id="vFaskesEmail">-</span></p>
+                    </div>
+
+                    <!-- JUDUL SURAT -->
+                    <div class="doc-title">
+                        <h1>SURAT RUJUKAN PASIEN</h1>
+                        <p style="font-size: 12px; margin-top: 5px;">Nomor Rujukan: <strong id="vFullId">-</strong></p>
+                    </div>
+
+                    <!-- SECTION 1: HEADER INFO -->
+                    <div style="display: flex; gap: 40px; border-bottom: 1px solid black; padding-bottom: 10px; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <div class="section-header">Dari Fasilitas Kesehatan</div>
+                            <table class="data-table">
+                                <tr><td width="100">Nama Faskes</td><td>: <strong id="vFaskes">-</strong></td></tr>
+                                <tr><td>Kab/Kota</td><td>: <span id="vKabKota">-</span></td></tr>
+                                <tr><td>Tingkat</td><td>: <span id="vTingkat">-</span></td></tr>
+                            </table>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="section-header">Ditujukan Kepada</div>
+                            <table class="data-table">
+                                <tr><td width="100">Nama RS</td><td>: <strong>RSUD Maju Jaya</strong></td></tr>
+                                <tr><td>Bagian/Poli</td><td>: <strong id="vPoli">-</strong></td></tr>
+                                <tr><td>Kota</td><td>: <span id="vTargetKota">-</span></td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: DATA PASIEN -->
+                    <div class="section-header">DATA PASIEN</div>
+                    <table class="data-table">
+                        <tr><td width="150">Nama Pasien</td><td>: <strong id="vName">-</strong></td></tr>
+                        <tr><td>No. Kartu BPJS</td><td>: <span id="vCard">-</span></td></tr>
+                        <tr><td>Tanggal Lahir</td><td>: <span id="vBirth">-</span> (Umur: <span id="vAge">-</span> Tahun)</td></tr>
+                        <tr><td>Jenis Kelamin</td><td>: <span id="vGender">-</span></td></tr>
+                        <tr><td>Status Peserta</td><td>: <strong id="vStatus">-</strong></td></tr>
+                    </table>
+                    <div style="border-bottom: 1px solid black; margin-bottom: 20px;"></div>
+
+                    <!-- SECTION 3: INFORMASI MEDIS -->
+                    <div class="section-header">INFORMASI MEDIS</div>
+                    <table class="data-table">
+                        <tr><td width="150">Diagnosa Awal</td><td>: <strong id="vDiag">-</strong></td></tr>
+                        <tr><td>Kode ICD-10</td><td>: <span id="vIcd">-</span></td></tr>
+                        <tr><td>Asal Diagnosa</td><td>: <span id="vFaskesDiag">-</span></td></tr>
+                    </table>
+
+                    <div style="font-weight: 700; margin-bottom: 5px;">Catatan dari Faskes Pengirim:</div>
+                    <div class="info-box" id="vNotes">-</div>
+
+                    <div style="font-weight: 700; margin-bottom: 5px;">Terapi / Tindakan yang Telah Diberikan:</div>
+                    <div class="info-box" id="vTherapy">-</div>
+
+                    <!-- DATES & SIGNATURE -->
+                    <div style="border-bottom: 1px solid black; margin-bottom: 20px;"></div>
+                    <table class="data-table" style="margin-bottom: 15px;">
+                        <tr><td width="150">Tanggal Surat Dibuat</td><td>: <span id="vLetterDate">-</span></td></tr>
+                        <tr><td>Berlaku s.d (Expired)</td><td>: <strong id="vExpDate">-</strong></td></tr>
+                    </table>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px;">
+                        <div style="text-align: center; width: 250px; font-size: 13px; line-height: 1.5;">
+                            <p style="margin: 0;"><span id="vKabKotaSign">-</span>, <span id="vLetterDateSign">-</span></p>
+                            <p style="margin: 5px 0 65px 0; font-weight: 500;">Dokter Pemeriksa,</p>
+                            <p style="margin: 0; font-weight: 700; text-decoration: underline;">( <span id="vDocName">-</span> )</p>
+                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">NIP/SIP: .................................</p>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER HALAMAN -->
+                    <div style="margin-top: auto; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif;">
+                        <span>Dokumen Rujukan Digital JKN/BPJS - DMS Hospital</span>
+                        <span style="font-weight: 600;">Halaman 1 dari 1</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-action">
+                <h3 style="font-weight: 800; margin-bottom: 12px; font-size: 20px;">Pratinjau Surat</h3>
+                <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 40px;">Dokumen ini merupakan arsip resmi rujukan digital pasien yang tersimpan di sistem Panda DMS.</p>
+                
+                <div style="flex: 1;"></div>
+
+                <button onclick="window.print()" style="display:block; width:100%; padding:18px; background:#10b981; color:white; border:none; border-radius:14px; text-decoration:none; text-align:center; font-weight:800; font-size:15px; cursor:pointer; box-shadow: 0 10px 20px rgba(16,185,129,0.2);"><i class="ph ph-printer" style="vertical-align:middle; margin-right:6px;"></i> Cetak Dokumen</button>
+                <button onclick="document.getElementById('modalPreview').classList.remove('active')" style="display:block; width:100%; padding:15px; border:none; background:none; color:#94a3b8; font-weight:700; margin-top:15px; cursor:pointer;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const logData = <?= json_encode($all_logs) ?>;
         const allDocs = <?= json_encode($docs_js) ?>;
@@ -386,6 +546,50 @@ if ($result->num_rows > 0) {
             document.getElementById('edit_therapy_initial').value = doc.therapy_initial || '';
 
             document.getElementById('modalEditReferral').classList.add('active');
+        }
+
+        function openPreviewModal(id) {
+            const d = allDocs.find(x => x.referral_id === id);
+            if(!d) return;
+            
+            // Header
+            document.getElementById('vKabKotaHead').textContent = d.faskes_kab_kota;
+            document.getElementById('vFaskesHead').textContent = d.origin_faskes;
+            document.getElementById('vFaskesAlamat').textContent = d.faskes_alamat || '[Alamat Faskes]';
+            document.getElementById('vFaskesTelp').textContent = d.faskes_telp || '[No. Telp]';
+            document.getElementById('vFaskesEmail').textContent = d.faskes_email || '[Email Faskes]';
+            document.getElementById('vFullId').textContent = d.referral_id + "/BPJS/" + new Date().getFullYear();
+            
+            // Section 1
+            document.getElementById('vFaskes').textContent = d.origin_faskes;
+            document.getElementById('vKabKota').textContent = d.faskes_kab_kota;
+            document.getElementById('vTingkat').textContent = d.faskes_tingkat;
+            document.getElementById('vPoli').textContent = d.target_poli;
+            document.getElementById('vTargetKota').textContent = d.target_kota;
+            
+            // Section 2
+            document.getElementById('vName').textContent = d.patient_name;
+            document.getElementById('vCard').textContent = d.card_number;
+            document.getElementById('vBirth').textContent = d.birth_date;
+            document.getElementById('vAge').textContent = d.age;
+            document.getElementById('vGender').textContent = d.gender;
+            document.getElementById('vStatus').textContent = d.patient_status_peserta;
+            
+            // Section 3
+            document.getElementById('vDiag').textContent = d.diagnosis_initial;
+            document.getElementById('vIcd').textContent = d.icd10;
+            document.getElementById('vFaskesDiag').textContent = d.origin_faskes;
+            document.getElementById('vNotes').textContent = d.medical_notes || "(Tanpa catatan)";
+            document.getElementById('vTherapy').textContent = d.therapy_initial || "(Tanpa terapi)";
+            
+            // Footer
+            document.getElementById('vLetterDate').textContent = d.letter_date;
+            document.getElementById('vExpDate').textContent = d.expiry_date;
+            document.getElementById('vKabKotaSign').textContent = d.faskes_kab_kota;
+            document.getElementById('vLetterDateSign').textContent = d.letter_date;
+            document.getElementById('vDocName').textContent = d.doctor_name;
+
+            document.getElementById('modalPreview').classList.add('active');
         }
     </script>
 </body>
