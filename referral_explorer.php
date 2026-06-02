@@ -477,13 +477,8 @@ if ($result->num_rows > 0) {
                         <tr><td>Berlaku s.d (Expired)</td><td>: <strong id="vExpDate">-</strong></td></tr>
                     </table>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px;">
-                        <div style="text-align: center; width: 250px; font-size: 13px; line-height: 1.5;">
-                            <p style="margin: 0;"><span id="vKabKotaSign">-</span>, <span id="vLetterDateSign">-</span></p>
-                            <p style="margin: 5px 0 65px 0; font-weight: 500;">Dokter Pemeriksa,</p>
-                            <p style="margin: 0; font-weight: 700; text-decoration: underline;">( <span id="vDocName">-</span> )</p>
-                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">NIP/SIP: .................................</p>
-                        </div>
+                    <div id="vSignatureContainer" style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px; min-height: 100px; align-items: center;">
+                        <!-- Will be populated dynamically by JS -->
                     </div>
 
                     <!-- FOOTER HALAMAN -->
@@ -579,7 +574,12 @@ if ($result->num_rows > 0) {
             document.getElementById('vFaskes').textContent = d.origin_faskes;
             document.getElementById('vKabKota').textContent = d.faskes_kab_kota;
             document.getElementById('vTingkat').textContent = d.faskes_tingkat;
-            document.getElementById('vPoli').textContent = d.target_poli;
+            
+            // Set Poli text based on whether it was changed by Nakes
+            const poliText = d.final_destination && d.final_destination !== d.target_poli ? 
+                             `${d.final_destination} <span style="font-size:11px; font-weight:normal; color:#dc2626; display:block; margin-top:2px;">(Dialihkan dari: ${d.target_poli})</span>` : 
+                             d.target_poli;
+            document.getElementById('vPoli').innerHTML = poliText;
             document.getElementById('vTargetKota').textContent = d.target_kota;
             
             // Section 2
@@ -600,9 +600,32 @@ if ($result->num_rows > 0) {
             // Footer
             document.getElementById('vLetterDate').textContent = d.letter_date;
             document.getElementById('vExpDate').textContent = d.expiry_date;
-            document.getElementById('vKabKotaSign').textContent = d.faskes_kab_kota;
-            document.getElementById('vLetterDateSign').textContent = d.letter_date;
-            document.getElementById('vDocName').textContent = d.doctor_name;
+            
+            // Signature & Stamp
+            const sigContainer = document.getElementById('vSignatureContainer');
+            if (d.status_flow === 'ENTRY') {
+                sigContainer.style.justifyContent = 'center';
+                sigContainer.innerHTML = `
+                    <div style="border: 2px dashed #cbd5e1; color: #94a3b8; border-radius: 8px; padding: 12px 24px; font-size: 13px; font-weight: 600; text-align: center; width: 100%;">
+                        <i class="ph ph-warning" style="vertical-align: middle; margin-right: 6px; color: #f59e0b;"></i> Belum Ada Tanda Tangan (Menunggu Pemeriksaan General Nakes)
+                    </div>
+                `;
+            } else {
+                sigContainer.style.justifyContent = 'flex-end';
+                const verifiedBy = d.verified_by || 'Ns. Clara Amelia, S.Kep';
+                const createdDate = d.created_at ? d.created_at.split(' ')[0] : d.letter_date;
+                sigContainer.innerHTML = `
+                    <div style="text-align: center; width: 250px; font-size: 13px; line-height: 1.5;">
+                        <p style="margin: 0;">Kota Malang, ${createdDate}</p>
+                        <p style="margin: 5px 0 10px 0; font-weight: 500;">Nakes Pemeriksa RSUD,</p>
+                        <div style="border: 2px solid #16a34a; color: #16a34a; border-radius: 8px; padding: 4px 8px; font-weight: 800; font-size: 11px; display: inline-block; margin-bottom: 10px; transform: rotate(-3deg);">
+                            TERVERIFIKASI SISTEM
+                        </div>
+                        <p style="margin: 0; font-weight: 700; text-decoration: underline;">( ${verifiedBy} )</p>
+                        <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">NIP/SIP: NKS-109384</p>
+                    </div>
+                `;
+            }
 
             document.getElementById('modalPreview').classList.add('active');
         }

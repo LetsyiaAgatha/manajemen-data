@@ -4,11 +4,34 @@
  */
 require_once 'config.php';
 
-// Logic Approve
+// Logic POST Verification (Pemeriksaan Awal & Tindakan Nakes)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_verification'])) {
+    $id = $conn->real_escape_string($_POST['approve_id']);
+    $final_dest = $conn->real_escape_string($_POST['final_destination']);
+    $verified_by = $conn->real_escape_string($_POST['verified_by']);
+    $nakes_notes = $conn->real_escape_string($_POST['nakes_notes']);
+    
+    // Update referral flow, final destination, and nakes verified_by
+    $conn->query("UPDATE referrals SET 
+        status_flow = 'VERIFY', 
+        final_destination = '$final_dest', 
+        verified_by = '$verified_by' 
+        WHERE referral_id = '$id'");
+    
+    // Add logs
+    $action_text = "Rujukan diperiksa & diteruskan ke: $final_dest oleh Nakes ($verified_by). Catatan: $nakes_notes";
+    $conn->query("INSERT INTO referral_logs (referral_id, stage, action_text, user_name, created_at) VALUES ('$id', 'VERIFIED', '$action_text', 'Nakes Verifikator', DATETIME('now', 'localtime'))");
+    
+    header("Location: referral_verification.php?msg=verified");
+    exit;
+}
+
+// Logic GET Approve (Alternative fallback)
 if (isset($_GET['approve_id'])) {
     $id = $conn->real_escape_string($_GET['approve_id']);
-    $conn->query("UPDATE referrals SET status_flow = 'VERIFY' WHERE referral_id = '$id'");
-    $conn->query("INSERT INTO referral_logs (referral_id, stage, action_text, user_name, created_at) VALUES ('$id', 'VERIFIED', 'Dokumen disetujui & diteruskan ke Poli', 'Verifikator', DATETIME('now', 'localtime'))");
+    // Fallback: set final_destination to target_poli
+    $conn->query("UPDATE referrals SET status_flow = 'VERIFY', final_destination = target_poli, verified_by = 'Nakes Verifikator' WHERE referral_id = '$id'");
+    $conn->query("INSERT INTO referral_logs (referral_id, stage, action_text, user_name, created_at) VALUES ('$id', 'VERIFIED', 'Dokumen disetujui & diteruskan ke Poli oleh Nakes', 'Verifikator', DATETIME('now', 'localtime'))");
     header("Location: referral_verification.php");
     exit;
 }
@@ -243,12 +266,9 @@ if ($result->num_rows > 0) {
                         <tr><td>Berlaku s.d (Expired)</td><td>: <strong id="vExpDate">-</strong></td></tr>
                     </table>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px;">
-                        <div style="text-align: center; width: 250px; font-size: 13px; line-height: 1.5;">
-                            <p style="margin: 0;"><span id="vKabKotaSign">-</span>, <span id="vLetterDateSign">-</span></p>
-                            <p style="margin: 5px 0 65px 0; font-weight: 500;">Dokter Pemeriksa,</p>
-                            <p style="margin: 0; font-weight: 700; text-decoration: underline;">( <span id="vDocName">-</span> )</p>
-                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">NIP/SIP: .................................</p>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 40px; min-height: 100px; align-items: center;">
+                        <div style="border: 2px dashed #cbd5e1; color: #94a3b8; border-radius: 8px; padding: 12px 24px; font-size: 13px; font-weight: 600; text-align: center; width: 100%;">
+                            <i class="ph ph-warning" style="vertical-align: middle; margin-right: 6px; color: #f59e0b;"></i> Belum Ada Tanda Tangan (Menunggu Pemeriksaan General Nakes)
                         </div>
                     </div>
 
@@ -260,14 +280,47 @@ if ($result->num_rows > 0) {
                 </div>
             </div>
             
-            <div class="sidebar-action">
-                <h3 style="font-weight: 800; margin-bottom: 12px; font-size: 20px;">Validasi Berkas</h3>
-                <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 40px;">Pastikan data yang muncul di preview sudah sesuai dengan dokumen fisik pasien sebelum diteruskan ke Poli Spesialis.</p>
+            <div class="sidebar-action" style="overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-start; height: 100%;">
+                <h3 style="font-weight: 800; margin-bottom: 12px; font-size: 20px; color: #1e293b;">Pemeriksaan Awal (Nakes)</h3>
+                <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 20px;">
+                    Lakukan pemeriksaan general awal pada pasien, lalu tentukan keputusan arah rujukan akhir di bawah ini.
+                </p>
                 
-                <div style="flex: 1;"></div>
+                <form action="referral_verification.php" method="POST" style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+                    <input type="hidden" name="approve_id" id="approve_id_input">
+                    
+                    <div class="form-group">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Tujuan Rujukan Akhir</label>
+                        <select name="final_destination" id="final_destination" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 13px;">
+                            <option value="">Poli Tujuan (Sesuai Rujukan)</option>
+                            <option value="IGD (Instalasi Gawat Darurat)">IGD (Instalasi Gawat Darurat)</option>
+                            <option value="ICU (Intensive Care Unit)">ICU (Intensive Care Unit)</option>
+                            <option value="Poli Penyakit Dalam">Poli Penyakit Dalam</option>
+                            <option value="Poli Anak">Poli Anak</option>
+                            <option value="Poli Bedah">Poli Bedah</option>
+                            <option value="Poli Saraf">Poli Saraf</option>
+                            <option value="Poli Gigi & Mulut">Poli Gigi & Mulut</option>
+                        </select>
+                    </div>
 
-                <a id="btnApprove" href="#" style="display:block; width:100%; padding:18px; background:#6366f1; color:white; border-radius:14px; text-decoration:none; text-align:center; font-weight:800; box-shadow: 0 10px 20px rgba(99,102,241,0.2);">Setujui & Teruskan</a>
-                <button onclick="document.getElementById('modalVerif').classList.remove('active')" style="display:block; width:100%; padding:15px; border:none; background:none; color:#94a3b8; font-weight:700; margin-top:15px; cursor:pointer;">Kembali</button>
+                    <div class="form-group">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Nama Nakes Pemeriksa</label>
+                        <input type="text" name="verified_by" value="Ns. Clara Amelia, S.Kep" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 13px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Catatan Pemeriksaan General</label>
+                        <textarea name="nakes_notes" placeholder="Contoh: Keadaan umum baik, tensi 120/80 mmHg. Layak diteruskan." rows="3" style="width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 13px; font-family: inherit; resize: none;"></textarea>
+                    </div>
+
+                    <button type="submit" name="submit_verification" style="width: 100%; padding: 16px; background: #6366f1; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px rgba(99,102,241,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;">
+                        <i class="ph ph-check-square-offset"></i> Setujui & Teruskan
+                    </button>
+                    
+                    <button type="button" onclick="document.getElementById('modalVerif').classList.remove('active')" style="width: 100%; padding: 12px; border: none; background: none; color: #94a3b8; font-weight: 700; cursor: pointer; font-size: 13px;">
+                        Batal
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -277,6 +330,15 @@ if ($result->num_rows > 0) {
         function openVerif(id) {
             const d = allDocs.find(x => x.referral_id === id);
             if(!d) return;
+            
+            // Set hidden input ID
+            document.getElementById('approve_id_input').value = d.referral_id;
+            
+            // Set dynamic target poli option
+            const finalDestSelect = document.getElementById('final_destination');
+            finalDestSelect.options[0].value = d.target_poli;
+            finalDestSelect.options[0].textContent = `${d.target_poli} (Sesuai Rujukan)`;
+            finalDestSelect.selectedIndex = 0;
             
             // Header
             document.getElementById('vKabKotaHead').textContent = d.faskes_kab_kota;
@@ -311,11 +373,7 @@ if ($result->num_rows > 0) {
             // Footer
             document.getElementById('vLetterDate').textContent = d.letter_date;
             document.getElementById('vExpDate').textContent = d.expiry_date;
-            document.getElementById('vKabKotaSign').textContent = d.faskes_kab_kota;
-            document.getElementById('vLetterDateSign').textContent = d.letter_date;
-            document.getElementById('vDocName').textContent = d.doctor_name;
-
-            document.getElementById('btnApprove').href = "referral_verification.php?approve_id=" + id;
+            
             document.getElementById('modalVerif').classList.add('active');
         }
     </script>

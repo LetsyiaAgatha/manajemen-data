@@ -105,25 +105,37 @@ $result = $conn->query($sql_poli);
                             <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; color: #64748b;">
                                 <th style="padding: 20px; text-align: left;">PASIEN</th>
                                 <th style="padding: 20px; text-align: left;">DIAGNOSA FASKES</th>
+                                <th style="padding: 20px; text-align: left;">TUJUAN AKHIR (NAKES)</th>
                                 <th style="padding: 20px; text-align: right;">INSTRUMEN</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if ($result->num_rows > 0): ?>
                                 <?php while($row = $result->fetch_assoc()): ?>
+                                    <?php 
+                                        $dest = !empty($row['final_destination']) ? $row['final_destination'] : $row['target_poli'];
+                                        $is_emergency = (strpos($dest, 'IGD') !== false || strpos($dest, 'ICU') !== false);
+                                        $badge_bg = $is_emergency ? '#fef2f2' : '#e0e7ff';
+                                        $badge_color = $is_emergency ? '#991b1b' : '#3730a3';
+                                    ?>
                                     <tr style="border-bottom: 1px solid #f1f5f9;">
                                         <td style="padding: 20px;">
                                             <div style="font-weight: 800;"><?= $row['patient_name'] ?></div>
                                             <div style="font-size: 11px; color: #94a3b8;"><?= $row['referral_id'] ?></div>
                                         </td>
                                         <td style="padding: 20px; font-size: 14px; color: #475569;"><?= $row['diagnosis_initial'] ?></td>
+                                        <td style="padding: 20px; font-size: 14px;">
+                                            <span style="background: <?= $badge_bg ?>; color: <?= $badge_color ?>; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                                                <i class="ph <?= $is_emergency ? 'ph-first-aid' : 'ph-stethoscope' ?>"></i> <?= $dest ?>
+                                            </span>
+                                        </td>
                                         <td style="padding: 20px; text-align: right;">
                                             <button onclick="openForm('<?= $row['referral_id'] ?>', '<?= $row['patient_name'] ?>')" style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight:700;">Buat Balasan</button>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
-                                <tr><td colspan="3" style="padding: 60px; text-align: center; color: #cbd5e1;">Antrean poli sedang kosong.</td></tr>
+                                <tr><td colspan="4" style="padding: 60px; text-align: center; color: #cbd5e1;">Antrean poli sedang kosong.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>

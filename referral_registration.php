@@ -5,6 +5,37 @@
  */
 require_once 'config.php';
 
+// AJAX NIK Search Handler
+if (isset($_GET['action']) && $_GET['action'] === 'search_nik') {
+    header('Content-Type: application/json');
+    $nik = isset($_GET['nik']) ? $conn->real_escape_string($_GET['nik']) : '';
+    
+    $patient_query = $conn->query("SELECT * FROM patients WHERE nik = '$nik' AND is_deleted = 0 LIMIT 1");
+    if ($patient_query && $patient_query->num_rows > 0) {
+        $patient = $patient_query->fetch_assoc();
+        
+        // Fetch medical/visit history of this patient from referrals table
+        $history_query = $conn->query("SELECT referral_id, target_poli, diagnosis_initial, status_flow, created_at FROM referrals WHERE nik = '$nik' AND is_deleted = 0 ORDER BY created_at DESC");
+        $history = [];
+        if ($history_query) {
+            while ($row = $history_query->fetch_assoc()) {
+                $history[] = $row;
+            }
+        }
+        
+        echo json_encode([
+            'found' => true,
+            'patient' => $patient,
+            'history' => $history
+        ]);
+    } else {
+        echo json_encode([
+            'found' => false
+        ]);
+    }
+    exit;
+}
+
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate ID
@@ -24,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $target_kota = $conn->real_escape_string($_POST['target_kota']);
     
     // Data Pasien
+    $p_nik = $conn->real_escape_string($_POST['nik']);
     $p_name = $conn->real_escape_string($_POST['patient_name']);
     $p_wa = $conn->real_escape_string($_POST['patient_wa']);
     $card_num = $conn->real_escape_string($_POST['card_number']);
@@ -47,16 +79,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         referral_id, patient_name, patient_wa, faskes_wa, origin_faskes, faskes_kab_kota, faskes_tingkat,
         faskes_alamat, faskes_telp, faskes_email,
         target_poli, target_kota, insurance_type, card_number, birth_date, gender, patient_status_peserta,
-        diagnosis_initial, icd10, medical_notes, therapy_initial, doctor_name, letter_date, expiry_date, received_date, status_flow
+        diagnosis_initial, icd10, medical_notes, therapy_initial, doctor_name, letter_date, expiry_date, received_date, status_flow, nik
     ) VALUES (
         '$ref_id', '$p_name', '$p_wa', '$faskes_wa', '$origin_faskes', '$faskes_kab_kota', '$faskes_tingkat',
         '$faskes_alamat', '$faskes_telp', '$faskes_email',
         '$target_poli', '$target_kota', 'BPJS', '$card_num', '$p_birth', '$p_gender', '$p_status',
-        '$diag_init', '$icd10', '$med_notes', '$therapy', '$doc_name', '$letter_date', '$exp_date', '$received_date', 'ENTRY'
+        '$diag_init', '$icd10', '$med_notes', '$therapy', '$doc_name', '$letter_date', '$exp_date', '$received_date', 'ENTRY', '$p_nik'
     )";
 
     if ($conn->query($sql)) {
         $msg = "success";
+        
+        // Simpan ke master data patients jika belum ada
+        $check_patient = $conn->query("SELECT id FROM patients WHERE nik = '$p_nik' AND is_deleted = 0 LIMIT 1");
+        if ($check_patient && $check_patient->num_rows === 0) {
+            $patient_id = "PSN-" . rand(1000, 9999);
+            $conn->query("INSERT INTO patients (patient_id, name, birth_date, gender, phone, insurance_type, card_number, nik) VALUES ('$patient_id', '$p_name', '$p_birth', '$p_gender', '$p_wa', 'BPJS', '$card_num', '$p_nik')");
+        }
+        
         $conn->query("INSERT INTO referral_logs (referral_id, stage, action_text, user_name, created_at) VALUES ('$ref_id', 'ENTRY', 'Dokumen rujukan baru dibuat', 'Admin Faskes', DATETIME('now', 'localtime'))");
     }
 }
@@ -176,6 +216,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-section">
                         <h3 class="section-title"><i class="ph ph-user"></i> 2. Data Pasien</h3>
+                        
+                        <!-- Pencarian NIK -->
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                            <label>NIK Pasien (Master Data)</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" id="search_nik" name="nik" placeholder="Masukkan 16 digit NIK..." required style="flex: 1;">
+                                <button type="button" onclick="performNikSearch()" style="background: #4f46e5; color: white; border: none; padding: 0 24px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    <i class="ph ph-magnifying-glass"></i> Cari NIK
+                                </button>
+                            </div>
+                            <div id="search_status" style="margin-top: 10px; font-weight: 700; font-size: 13px; display: none;"></div>
+                        </div>
+
+                        <!-- Riwayat Kunjungan Pasien (Akan tampil dinamis) -->
+                        <div id="patient_history_section" style="background: #fafafa; border-radius: 12px; border: 1px dashed #cbd5e1; padding: 20px; margin-bottom: 24px; display: none;">
+                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+                                <i class="ph ph-clock-counter-clockwise" style="color: #6366f1;"></i> Riwayat Medis Pasien di RSUD
+                            </h4>
+                            <div id="history_list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                        </div>
+
                         <div class="grid-2">
                             <div class="form-group">
                                 <label>Nama Lengkap Pasien</label>
@@ -267,6 +328,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         window.onload = calcExp;
+
+        function performNikSearch() {
+            const nik = document.getElementById('search_nik').value.trim();
+            if (!nik) {
+                alert('Silakan masukkan NIK terlebih dahulu.');
+                return;
+            }
+            
+            const statusDiv = document.getElementById('search_status');
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#64748b';
+            statusDiv.textContent = 'Mencari data...';
+            
+            fetch(`referral_registration.php?action=search_nik&nik=${encodeURIComponent(nik)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const historySection = document.getElementById('patient_history_section');
+                    const historyList = document.getElementById('history_list');
+                    
+                    if (data.found) {
+                        statusDiv.style.color = '#16a34a';
+                        statusDiv.textContent = '✓ Pasien Terdaftar (Data terisi otomatis)';
+                        
+                        // Populate fields
+                        document.querySelector('input[name="patient_name"]').value = data.patient.name || '';
+                        document.querySelector('input[name="card_number"]').value = data.patient.card_number || '';
+                        document.querySelector('input[name="birth_date"]').value = data.patient.birth_date || '';
+                        document.querySelector('select[name="gender"]').value = data.patient.gender || 'Laki-laki';
+                        document.querySelector('input[name="patient_status_peserta"]').value = data.patient.insurance_type === 'BPJS' ? 'PBI' : (data.patient.insurance_type || '');
+                        document.querySelector('input[name="patient_wa"]').value = data.patient.phone || '';
+                        
+                        // Populate History
+                        historyList.innerHTML = '';
+                        if (data.history && data.history.length > 0) {
+                            data.history.forEach(item => {
+                                const div = document.createElement('div');
+                                div.style.background = 'white';
+                                div.style.padding = '12px';
+                                div.style.borderRadius = '8px';
+                                div.style.border = '1px solid #e2e8f0';
+                                div.style.fontSize = '13px';
+                                
+                                let statusBadge = '';
+                                if (item.status_flow === 'ENTRY') statusBadge = '<span style="background:#fef3c7; color:#d97706; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px;">MASUK</span>';
+                                else if (item.status_flow === 'VERIFY') statusBadge = '<span style="background:#e0e7ff; color:#4f46e5; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px;">VERIFIKASI</span>';
+                                else if (item.status_flow === 'REPLIED') statusBadge = '<span style="background:#d1fae5; color:#059669; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px;">DIJAWAB</span>';
+                                
+                                div.innerHTML = `
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                        <strong>ID: ${item.referral_id}</strong>
+                                        ${statusBadge}
+                                    </div>
+                                    <div style="color:#475569;">Poli Tujuan: <strong>${item.target_poli}</strong></div>
+                                    <div style="color:#64748b; font-size:12px; margin-top:2px;">Diagnosa Awal: ${item.diagnosis_initial}</div>
+                                    <div style="color:#94a3b8; font-size:11px; margin-top:4px;">Tanggal: ${item.created_at}</div>
+                                `;
+                                historyList.appendChild(div);
+                            });
+                            historySection.style.display = 'block';
+                        } else {
+                            historyList.innerHTML = '<p style="color:#64748b; font-size:13px; margin:0;">Tidak ada riwayat rujukan/pemeriksaan sebelumnya.</p>';
+                            historySection.style.display = 'block';
+                        }
+                    } else {
+                        statusDiv.style.color = '#2563eb';
+                        statusDiv.textContent = 'ℹ Pasien Baru (Silakan masukkan data baru)';
+                        
+                        // Clear fields for new input
+                        document.querySelector('input[name="patient_name"]').value = '';
+                        document.querySelector('input[name="card_number"]').value = '';
+                        document.querySelector('input[name="birth_date"]').value = '';
+                        document.querySelector('select[name="gender"]').value = 'Laki-laki';
+                        document.querySelector('input[name="patient_status_peserta"]').value = 'PBI';
+                        document.querySelector('input[name="patient_wa"]').value = '';
+                        
+                        historyList.innerHTML = '';
+                        historySection.style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    statusDiv.style.color = '#dc2626';
+                    statusDiv.textContent = '⚠️ Gagal memuat data.';
+                });
+        }
     </script>
 </body>
 </html>
