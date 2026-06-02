@@ -526,7 +526,7 @@ if ($result->num_rows > 0) {
                     item.innerHTML = `
                         <div class="timeline-icon"></div>
                         <div class="timeline-content">
-                            <div class="timeline-time">${new Date(log.created_at).toLocaleString('id-ID')}</div>
+                            <div class="timeline-time">${log.created_at ? new Date(log.created_at.replace(' ', 'T')).toLocaleString('id-ID') : '-'}</div>
                             <div style="font-weight: 800; margin: 4px 0; font-size: 14px; color: #1e293b;">${log.action_text}</div>
                             <div class="timeline-author"><i class="ph ph-user-circle"></i> Ditangani Oleh: ${log.user_name}</div>
                         </div>

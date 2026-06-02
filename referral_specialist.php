@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['referral_id'])) {
              . "Nama: *$p_name*\n"
              . "Diagnosa: $spec_diagnosis\n"
              . "Rencana: $follow_up\n\n"
-             . "Tks.";
+             . "Terima Kasih.";
     
     $notif_status = sendWhatsApp($f_wa, $message);
     $notif_obj = json_decode($notif_status, true);
