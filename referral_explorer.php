@@ -31,6 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $p_wa = $conn->real_escape_string($_POST['patient_wa']);
     
     $origin_faskes = $conn->real_escape_string($_POST['origin_faskes']);
+    $faskes_alamat = $conn->real_escape_string($_POST['faskes_alamat']);
+    $faskes_telp = $conn->real_escape_string($_POST['faskes_telp']);
+    $faskes_email = $conn->real_escape_string($_POST['faskes_email']);
     $diag_init = $conn->real_escape_string($_POST['diagnosis_initial']);
     $icd10 = $conn->real_escape_string($_POST['icd10']);
     $med_notes = $conn->real_escape_string($_POST['medical_notes']);
@@ -45,6 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         patient_status_peserta = '$p_status',
         patient_wa = '$p_wa',
         origin_faskes = '$origin_faskes',
+        faskes_alamat = '$faskes_alamat',
+        faskes_telp = '$faskes_telp',
+        faskes_email = '$faskes_email',
         diagnosis_initial = '$diag_init',
         icd10 = '$icd10',
         medical_notes = '$med_notes',
@@ -281,6 +287,22 @@ if ($result->num_rows > 0) {
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Alamat Faskes Pengirim</label>
+                    <input type="text" name="faskes_alamat" id="edit_faskes_alamat" class="form-input" required>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">No. Telp Faskes</label>
+                        <input type="text" name="faskes_telp" id="edit_faskes_telp" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Faskes</label>
+                        <input type="email" name="faskes_email" id="edit_faskes_email" class="form-input" required>
+                    </div>
+                </div>
+
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">Diagnosa Awal</label>
@@ -354,6 +376,9 @@ if ($result->num_rows > 0) {
             document.getElementById('edit_patient_status_peserta').value = doc.patient_status_peserta;
             document.getElementById('edit_patient_wa').value = doc.patient_wa || '';
             document.getElementById('edit_origin_faskes').value = doc.origin_faskes;
+            document.getElementById('edit_faskes_alamat').value = doc.faskes_alamat || '';
+            document.getElementById('edit_faskes_telp').value = doc.faskes_telp || '';
+            document.getElementById('edit_faskes_email').value = doc.faskes_email || '';
             document.getElementById('edit_doctor_name').value = doc.doctor_name;
             document.getElementById('edit_diagnosis_initial').value = doc.diagnosis_initial;
             document.getElementById('edit_icd10').value = doc.icd10;

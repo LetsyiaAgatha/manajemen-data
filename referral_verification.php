@@ -167,7 +167,7 @@ if ($result->num_rows > 0) {
                         <p style="text-transform: uppercase;">PEMERINTAH KABUPATEN/KOTA <span id="vKabKotaHead">-</span></p>
                         <p style="font-weight: 700;">DINAS KESEHATAN</p>
                         <h2 style="text-transform: uppercase;">[<span id="vFaskesHead">-</span>]</h2>
-                        <p>Alamat: [Alamat Faskes] | Telp: [No. Telp] | Email: [Email Faskes]</p>
+                        <p>Alamat: <span id="vFaskesAlamat">-</span> | Telp: <span id="vFaskesTelp">-</span> | Email: <span id="vFaskesEmail">-</span></p>
                     </div>
 
                     <!-- JUDUL SURAT -->
@@ -266,6 +266,9 @@ if ($result->num_rows > 0) {
             // Header
             document.getElementById('vKabKotaHead').textContent = d.faskes_kab_kota;
             document.getElementById('vFaskesHead').textContent = d.origin_faskes;
+            document.getElementById('vFaskesAlamat').textContent = d.faskes_alamat || '[Alamat Faskes]';
+            document.getElementById('vFaskesTelp').textContent = d.faskes_telp || '[No. Telp]';
+            document.getElementById('vFaskesEmail').textContent = d.faskes_email || '[Email Faskes]';
             document.getElementById('vFullId').textContent = d.referral_id + "/BPJS/" + new Date().getFullYear();
             
             // Section 1

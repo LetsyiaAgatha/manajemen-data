@@ -15,6 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $faskes_kab_kota = $conn->real_escape_string($_POST['faskes_kab_kota']);
     $faskes_tingkat = $conn->real_escape_string($_POST['faskes_tingkat']);
     $faskes_wa = $conn->real_escape_string($_POST['faskes_wa']);
+    $faskes_alamat = $conn->real_escape_string($_POST['faskes_alamat']);
+    $faskes_telp = $conn->real_escape_string($_POST['faskes_telp']);
+    $faskes_email = $conn->real_escape_string($_POST['faskes_email']);
     
     // Tujuan
     $target_poli = $conn->real_escape_string($_POST['target_poli']);
@@ -42,10 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sql = "INSERT INTO referrals (
         referral_id, patient_name, patient_wa, faskes_wa, origin_faskes, faskes_kab_kota, faskes_tingkat,
+        faskes_alamat, faskes_telp, faskes_email,
         target_poli, target_kota, insurance_type, card_number, birth_date, gender, patient_status_peserta,
         diagnosis_initial, icd10, medical_notes, therapy_initial, doctor_name, letter_date, expiry_date, received_date, status_flow
     ) VALUES (
         '$ref_id', '$p_name', '$p_wa', '$faskes_wa', '$origin_faskes', '$faskes_kab_kota', '$faskes_tingkat',
+        '$faskes_alamat', '$faskes_telp', '$faskes_email',
         '$target_poli', '$target_kota', 'BPJS', '$card_num', '$p_birth', '$p_gender', '$p_status',
         '$diag_init', '$icd10', '$med_notes', '$therapy', '$doc_name', '$letter_date', '$exp_date', '$received_date', 'ENTRY'
     )";
@@ -141,6 +146,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label>No. WA Faskes</label>
                                 <input type="text" name="faskes_wa" required>
+                            </div>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <label>Alamat Faskes Pengirim</label>
+                            <input type="text" name="faskes_alamat" required placeholder="Contoh: Jl. Terusan Cikampek No. 10">
+                        </div>
+                        <div class="grid-2" style="margin-top:20px;">
+                            <div class="form-group">
+                                <label>No. Telp Faskes</label>
+                                <input type="text" name="faskes_telp" required placeholder="Contoh: (0341) 551070">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Faskes</label>
+                                <input type="email" name="faskes_email" required placeholder="Contoh: pusk.dinoyo@malangkota.go.id">
                             </div>
                         </div>
                         <div class="grid-2" style="margin-top:20px;">
