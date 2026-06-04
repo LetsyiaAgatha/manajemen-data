@@ -59,6 +59,54 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
+// Auto-Sync: Pastikan semua pasien unik dari rujukan (referrals) ada di tabel patients
+$sql_check_missing = "
+    SELECT DISTINCT 
+        r.patient_name, 
+        r.nik, 
+        r.birth_date, 
+        r.gender, 
+        r.patient_wa, 
+        r.card_number,
+        r.insurance_type
+    FROM referrals r
+    WHERE r.is_deleted = 0 
+      AND NOT EXISTS (
+          SELECT 1 
+          FROM patients p 
+          WHERE p.name = r.patient_name 
+            AND p.is_deleted = 0
+      )
+";
+$missing_res = $conn->query($sql_check_missing);
+if ($missing_res && $missing_res->num_rows > 0) {
+    while ($m_row = $missing_res->fetch_assoc()) {
+        $p_name = $conn->real_escape_string($m_row['patient_name']);
+        $p_nik = $conn->real_escape_string($m_row['nik']);
+        $p_birth = $conn->real_escape_string($m_row['birth_date']);
+        $p_gender = $conn->real_escape_string($m_row['gender']);
+        $p_wa = $conn->real_escape_string($m_row['patient_wa']);
+        $card_num = $conn->real_escape_string($m_row['card_number']);
+        $ins_type = $conn->real_escape_string($m_row['insurance_type']);
+        if (empty($ins_type)) {
+            $ins_type = 'BPJS';
+        }
+        
+        // Generate unique patient_id
+        $new_pid = "PSN-" . rand(1000, 9999);
+        while (true) {
+            $dup_check = $conn->query("SELECT id FROM patients WHERE patient_id = '$new_pid'");
+            if ($dup_check->num_rows == 0) {
+                break;
+            }
+            $new_pid = "PSN-" . rand(1000, 9999);
+        }
+        
+        $conn->query("INSERT INTO patients (patient_id, name, birth_date, gender, phone, insurance_type, card_number, nik) 
+                      VALUES ('$new_pid', '$p_name', '$p_birth', '$p_gender', '$p_wa', '$ins_type', '$card_num', '$p_nik')");
+    }
+}
+
 // 3. Ambil data pasien (Hanya yang is_deleted = 0)
 $sql_patients = "SELECT * FROM patients WHERE is_deleted = 0 ORDER BY created_at DESC";
 $result = $conn->query($sql_patients);
