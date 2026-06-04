@@ -38,8 +38,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'search_nik') {
 
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Generate ID
-    $ref_id = "RUJ-" . rand(1000, 9999);
+    // Generate ID (Opsi B: RUJ-[POLI]-YYMMDD-[XXX])
+    $target_poli = $conn->real_escape_string($_POST['target_poli']);
+    $poliName = trim(strtoupper($target_poli));
+    if (strpos($poliName, 'POLI ') === 0) {
+        $poliName = substr($poliName, 5);
+    }
+    $poliCode = substr($poliName, 0, 3);
+    if (empty($poliCode)) { $poliCode = 'GEN'; }
+    $dateStr = date('ymd');
+    
+    while (true) {
+        $randNum = rand(100, 999);
+        $ref_id = "RUJ-" . $poliCode . "-" . $dateStr . "-" . $randNum;
+        $dup_check = $conn->query("SELECT id FROM referrals WHERE referral_id = '$ref_id'");
+        if ($dup_check->num_rows == 0) {
+            break;
+        }
+    }
     
     // Data Faskes
     $origin_faskes = $conn->real_escape_string($_POST['origin_faskes']);
@@ -93,7 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Simpan ke master data patients jika belum ada
         $check_patient = $conn->query("SELECT id FROM patients WHERE nik = '$p_nik' AND is_deleted = 0 LIMIT 1");
         if ($check_patient && $check_patient->num_rows === 0) {
-            $patient_id = "PSN-" . rand(1000, 9999);
+            $genderLetter = (trim($p_gender) === 'Laki-laki') ? 'L' : 'P';
+            $birthYear = !empty($p_birth) ? date('Y', strtotime($p_birth)) : '0000';
+            while (true) {
+                $randNum = rand(1000, 9999);
+                $patient_id = "PSN-" . $genderLetter . "-" . $birthYear . "-" . $randNum;
+                $dup_check = $conn->query("SELECT id FROM patients WHERE patient_id = '$patient_id'");
+                if ($dup_check->num_rows == 0) {
+                    break;
+                }
+            }
             $conn->query("INSERT INTO patients (patient_id, name, birth_date, gender, phone, insurance_type, card_number, nik) VALUES ('$patient_id', '$p_name', '$p_birth', '$p_gender', '$p_wa', 'BPJS', '$card_num', '$p_nik')");
         }
         

@@ -92,14 +92,16 @@ if ($missing_res && $missing_res->num_rows > 0) {
             $ins_type = 'BPJS';
         }
         
-        // Generate unique patient_id
-        $new_pid = "PSN-" . rand(1000, 9999);
+        // Generate unique patient_id (Opsi B: PSN-[GENDER]-[TAHUN_LAHIR]-[XXXX])
+        $genderLetter = (trim($p_gender) === 'Laki-laki') ? 'L' : 'P';
+        $birthYear = !empty($p_birth) ? date('Y', strtotime($p_birth)) : '0000';
         while (true) {
+            $randNum = rand(1000, 9999);
+            $new_pid = "PSN-" . $genderLetter . "-" . $birthYear . "-" . $randNum;
             $dup_check = $conn->query("SELECT id FROM patients WHERE patient_id = '$new_pid'");
             if ($dup_check->num_rows == 0) {
                 break;
             }
-            $new_pid = "PSN-" . rand(1000, 9999);
         }
         
         $conn->query("INSERT INTO patients (patient_id, name, birth_date, gender, phone, insurance_type, card_number, nik) 
