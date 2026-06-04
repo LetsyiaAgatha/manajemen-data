@@ -106,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn->query($sql)) {
         $msg = "success";
         
-        // Simpan ke master data patients jika belum ada
-        $check_patient = $conn->query("SELECT id FROM patients WHERE nik = '$p_nik' AND is_deleted = 0 LIMIT 1");
+        // Simpan ke master data patients jika belum ada (dicocokkan berdasarkan NIK atau Nama)
+        $check_patient = $conn->query("SELECT id FROM patients WHERE ((nik = '$p_nik' AND '$p_nik' != '') OR name = '$p_name') AND is_deleted = 0 LIMIT 1");
         if ($check_patient && $check_patient->num_rows === 0) {
             $genderLetter = (trim($p_gender) === 'Laki-laki') ? 'L' : 'P';
             $birthYear = !empty($p_birth) ? date('Y', strtotime($p_birth)) : '0000';

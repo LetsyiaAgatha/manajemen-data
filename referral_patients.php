@@ -61,14 +61,14 @@ if (isset($_GET['delete_id'])) {
 
 // Auto-Sync: Pastikan semua pasien unik dari rujukan (referrals) ada di tabel patients
 $sql_check_missing = "
-    SELECT DISTINCT 
+    SELECT 
         r.patient_name, 
-        r.nik, 
-        r.birth_date, 
-        r.gender, 
-        r.patient_wa, 
-        r.card_number,
-        r.insurance_type
+        MAX(r.nik) as nik, 
+        MAX(r.birth_date) as birth_date, 
+        MAX(r.gender) as gender, 
+        MAX(r.patient_wa) as patient_wa, 
+        MAX(r.card_number) as card_number,
+        MAX(r.insurance_type) as insurance_type
     FROM referrals r
     WHERE r.is_deleted = 0 
       AND NOT EXISTS (
@@ -77,6 +77,7 @@ $sql_check_missing = "
           WHERE p.name = r.patient_name 
             AND p.is_deleted = 0
       )
+    GROUP BY r.patient_name
 ";
 $missing_res = $conn->query($sql_check_missing);
 if ($missing_res && $missing_res->num_rows > 0) {
