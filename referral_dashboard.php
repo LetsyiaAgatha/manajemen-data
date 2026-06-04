@@ -57,7 +57,7 @@ $logs = $conn->query("SELECT * FROM referral_logs ORDER BY created_at DESC LIMIT
                                 <li class="active"><a href="referral_dashboard.php"><i class="ph ph-squares-four"></i><span>Dashboard</span></a></li>
                                 <li><a href="referral_verification.php"><i class="ph ph-check-square-offset"></i><span>Verifikasi Berkas Masuk</span></a></li>
                                 <li><a href="referral_explorer.php"><i class="ph ph-files"></i><span>Arsip Rujukan Digital</span></a></li>
-                                <li><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Layanan Poli Spesialis</span></a></li>
+                                <li><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Penerimaan Rujukan Akhir</span></a></li>
                                 <li><a href="referral_patients.php"><i class="ph ph-users"></i><span>Basis Data Pasien</span></a></li>
                             </ul>
                         </div>

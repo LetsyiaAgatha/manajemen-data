@@ -215,7 +215,7 @@ if ($result->num_rows > 0) {
                                 <li><a href="referral_dashboard.php"><i class="ph ph-squares-four"></i><span>Dashboard</span></a></li>
                                 <li><a href="referral_verification.php"><i class="ph ph-check-square-offset"></i><span>Verifikasi Berkas Masuk</span></a></li>
                                 <li class="active"><a href="referral_explorer.php"><i class="ph ph-files"></i><span>Arsip Rujukan Digital</span></a></li>
-                                <li><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Layanan Poli Spesialis</span></a></li>
+                                <li><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Penerimaan Rujukan Akhir</span></a></li>
                                 <li><a href="referral_patients.php"><i class="ph ph-users"></i><span>Basis Data Pasien</span></a></li>
                             </ul>
                         </div>
@@ -242,7 +242,7 @@ if ($result->num_rows > 0) {
                         <?php while($row = $result->fetch_assoc()): 
                             $status = $row['status_flow'];
                             $badge_color = ($status == 'REPLIED') ? '#10b981' : (($status == 'VERIFY') ? '#f59e0b' : '#6366f1');
-                            $status_text = ($status == 'REPLIED') ? 'SELESAI (ARSIP)' : (($status == 'VERIFY') ? 'DI POLI SPESIALIS' : 'PROSES VERIFIKASI');
+                            $status_text = ($status == 'REPLIED') ? 'SELESAI (ARSIP)' : (($status == 'VERIFY') ? 'PENERIMAAN RUJUKAN AKHIR' : 'PROSES VERIFIKASI');
                         ?>
                             <div class="card" style="padding: 24px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
                                 <div>

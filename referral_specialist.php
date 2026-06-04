@@ -1,6 +1,6 @@
 <?php
 /**
- * Layanan Poli Spesialis - Referral System (Final Layout Fix)
+ * Penerimaan Rujukan Akhir - Referral System (Final Layout Fix)
  * RSUD Maju Jaya
  */
 require_once 'config.php';
@@ -44,7 +44,7 @@ $result = $conn->query($sql_poli);
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Layanan Poli Spesialis - RSUD Maju Jaya</title>
+    <title>Penerimaan Rujukan Akhir - RSUD Maju Jaya</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="styles.css">
@@ -89,7 +89,7 @@ $result = $conn->query($sql_poli);
                                 <li><a href="referral_dashboard.php"><i class="ph ph-squares-four"></i><span>Dashboard</span></a></li>
                                 <li><a href="referral_verification.php"><i class="ph ph-check-square-offset"></i><span>Verifikasi Berkas Masuk</span></a></li>
                                 <li><a href="referral_explorer.php"><i class="ph ph-files"></i><span>Arsip Rujukan Digital</span></a></li>
-                                <li class="active"><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Layanan Poli Spesialis</span></a></li>
+                                <li class="active"><a href="referral_specialist.php"><i class="ph ph-stethoscope"></i><span>Penerimaan Rujukan Akhir</span></a></li>
                                 <li><a href="referral_patients.php"><i class="ph ph-users"></i><span>Basis Data Pasien</span></a></li>
                             </ul>
                         </div>
@@ -98,7 +98,7 @@ $result = $conn->query($sql_poli);
             </aside>
 
             <main class="content-area">
-                <h1 class="page-title">Pemeriksaan Poli Spesialis</h1>
+                <h1 class="page-title">Penerimaan Rujukan Akhir</h1>
                 <div class="card" style="border-radius: 20px; overflow: hidden;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
